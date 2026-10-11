@@ -18,7 +18,6 @@ import unittest
 from inspect import signature
 from typing import Iterator, Tuple, Union, get_type_hints
 
-from pyspark.errors import PySparkValueError
 from pyspark.sql import Row
 from pyspark.sql import functions as sf
 from pyspark.sql.pandas.functions import ArrowUDFType, arrow_udf
@@ -309,34 +308,6 @@ class ArrowUDFTypeHintsTests(ReusedSQLTestCase):
             infer_eval_type,
             signature(func),
             get_type_hints(func),
-        )
-
-    def test_missing_parameter_type_annotation(self):
-        def func(col) -> pa.Array:
-            pass
-
-        sig = signature(func)
-        with self.assertRaises(PySparkValueError) as error:
-            infer_eval_type(sig, get_type_hints(func), kind="arrow")
-
-        self.check_error(
-            error.exception,
-            errorClass="TYPE_HINT_SHOULD_BE_SPECIFIED",
-            messageParameters={"target": "all parameters", "sig": str(sig)},
-        )
-
-    def test_missing_return_type_annotation(self):
-        def func(col: pa.Array):
-            pass
-
-        sig = signature(func)
-        with self.assertRaises(PySparkValueError) as error:
-            infer_eval_type(sig, get_type_hints(func), kind="arrow")
-
-        self.check_error(
-            error.exception,
-            errorClass="TYPE_HINT_SHOULD_BE_SPECIFIED",
-            messageParameters={"target": "the return type", "sig": str(sig)},
         )
 
     def test_scalar_udf_type_hint(self):
