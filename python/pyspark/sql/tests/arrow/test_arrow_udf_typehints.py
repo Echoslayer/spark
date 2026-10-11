@@ -311,6 +311,20 @@ class ArrowUDFTypeHintsTests(ReusedSQLTestCase):
             get_type_hints(func),
         )
 
+    def test_missing_parameter_type_annotation(self):
+        def func(col) -> pa.Array:
+            pass
+
+        sig = signature(func)
+        with self.assertRaises(PySparkValueError) as error:
+            infer_eval_type(sig, get_type_hints(func), kind="arrow")
+
+        self.check_error(
+            error.exception,
+            errorClass="TYPE_HINT_SHOULD_BE_SPECIFIED",
+            messageParameters={"target": "all parameters", "sig": str(sig)},
+        )
+
     def test_missing_return_type_annotation(self):
         def func(col: pa.Array):
             pass
